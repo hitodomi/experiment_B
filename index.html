@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>走れメロス - サウンドスケープ読書実験</title>
+    <style>
+        :root {
+            --bg-color: #f7f5f0;
+            --container-bg: #ffffff;
+            --text-color: #2c2c2c;
+            --accent-blue: #3a86ff;
+            --accent-blue-light: #eef4ff;
+            --accent-green: #2a9d8f;
+            --accent-green-light: #e8f5e9;
+            --accent-red: #e63946;
+            --accent-red-light: #ffebee;
+            --accent-amber: #e76f51;
+            --accent-amber-light: #fff3e0;
+            --border-color: #e5e0d8;
+        }
+
+        body {
+            font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+            line-height: 2.8;
+            max-width: 820px;
+            margin: 40px auto 100px auto;
+            padding: 0 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 26px;
+            letter-spacing: 0.15em;
+            margin-bottom: 6px;
+            color: #1a1a1a;
+        }
+
+        p.experiment-note {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .legend-guide {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #555;
+            background: #eae5dc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-flex;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .novel-container {
+            background: var(--container-bg);
+            padding: 60px 75px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            margin-top: 25px;
+        }
+
+        .sentence {
+            margin-bottom: 1.4em;
+            text-indent: 1em;
+            font-size: 17px;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+
+        .sentence:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* ルビの垂直配置レイアウト */
+        ruby {
+            display: inline-ruby !important;
+            ruby-position: over !important;
+            -webkit-ruby-position: over !important;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        rt {
+            display: ruby-text !important;
+            font-size: 0.55em !important;
+            line-height: 1 !important;
+            color: #666;
+            text-align: center;
+            user-select: none;
+        }
+
+        /* キーワードスタイル */
+        .sound-keyword {
+            display: inline;
+            padding: 2px 3px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+
+        /* アクション効果音（青） */
+        .sound-keyword.action-kw {
+            background-color: var(--accent-blue-light);
+            color: #0b4f6c;
+            border-bottom: 2px solid var(--accent-blue);
+        }
+
+        .sound-keyword.action-kw:hover {
+            background-color: #d0e1fd;
+        }
+
+        /* 環境音/BGM開始（緑） */
+        .sound-keyword.ambient-kw {
+            background-color: var(--accent-green-light);
+            color: #004d00;
+            border-bottom: 2px solid var(--accent-green);
+        }
+
+        .sound-keyword.ambient-kw:hover {
+            background-color: #c8e6c9;
+        }
+
+        /* BGM停止地点（赤点線） */
+        .sound-keyword.stop-kw {
+            background-color: var(--accent-red-light);
+            color: #b71c1c;
+            border-bottom: 2px dashed var(--accent-red);
+            cursor: pointer;
+        }
+
+        .sound-keyword.stop-kw:hover {
+            background-color: #ffcdd2;
+        }
+
+        /* 再生中停止ポイントの点滅 */
+        .sound-keyword.stop-kw.active-target {
+            animation: pulse-stop 1.8s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        @keyframes pulse-stop {
+            0% {
+                background-color: #ffebee;
+                box-shadow: 0 0 0px rgba(230, 57, 70, 0.2);
+            }
+
+            50% {
+                background-color: #ffcdd2;
+                box-shadow: 0 0 8px rgba(230, 57, 70, 0.6);
+            }
+
+            100% {
+                background-color: #ffebee;
+                box-shadow: 0 0 0px rgba(230, 57, 70, 0.2);
+            }
+        }
+
+        .sound-keyword.sound-triggered {
+            background-color: var(--accent-amber-light) !important;
+            color: var(--accent-amber) !important;
+            border-bottom-color: var(--accent-amber) !important;
+        }
+
+        /* スタート画面オーバーレイ */
+        #start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(247, 245, 240, 0.96);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+
+        #start-button {
+            background: #2c2c2c;
+            color: #fff;
+            border: none;
+            padding: 16px 40px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        #start-button:hover {
+            background: #3a86ff;
+            transform: scale(1.02);
+        }
+
+        /* トースト通知 */
+        #sound-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(30, 30, 30, 0.88);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 380px;
+            line-height: 1.5;
+        }
+
+        #sound-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-overlay">
+        <h1 style="margin-bottom: 10px;">走れメロス - 読書実験</h1>
+        <p style="margin-bottom: 25px; color: #666; font-size: 14px;">（クライマックス抜粋シーン：濁流〜山賊の峠越え）</p>
+        <button id="start-button">実験を開始する（音声有効化）</button>
+    </div>
+
+    <header>
+        <h1>走れメロス（実験抜粋区間）</h1>
+        <p class="experiment-note">マウスカーソルを下線のある単語に合わせて読み進めてください。</p>
+        <div class="legend-guide">
+            <span class="legend-item"><span class="sound-keyword action-kw"
+                    style="font-size:12px; padding:1px 5px;">青下線</span>: アクション音</span>
+            <span class="legend-item"><span class="sound-keyword ambient-kw"
+                    style="font-size:12px; padding:1px 5px;">緑下線</span>: BGM/環境音</span>
+            <span class="legend-item"><span class="sound-keyword stop-kw"
+                    style="font-size:12px; padding:1px 5px;">赤点線</span>: BGM停止地点</span>
+        </div>
+    </header>
+
+    <div class="novel-container" id="novel-box">
+        <p style="text-align: center; color: #888;">実験データを読み込んでいます...</p>
+    </div>
+
+    <div id="sound-toast">
+        <span class="toast-icon" id="toast-icon">🔊</span>
+        <div id="toast-text">効果音が再生されました</div>
+    </div>
+
+    <script>
+        // 💡 実験で表示する区間（第211文「歩こう」から第247文「膝を折った」まで）
+        const EXPERIMENT_START_INDEX = 211;
+        const EXPERIMENT_END_INDEX = 247;
+
+        const container = document.getElementById('novel-box');
+        const toast = document.getElementById('sound-toast');
+        const toastText = document.getElementById('toast-text');
+        const toastIcon = document.getElementById('toast-icon');
+        const startOverlay = document.getElementById('start-overlay');
+        const startButton = document.getElementById('start-button');
+        let toastTimer = null;
+
+        startButton.addEventListener('click', () => {
+            startOverlay.style.opacity = '0';
+            setTimeout(() => {
+                startOverlay.style.display = 'none';
+            }, 500);
+
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) {
+                console.log("AudioContext init error", e);
+            }
+        });
+
+        let ambientAudio = null;
+        let ambientFilename = null;
+        let currentEndKeyword = null;
+        let actionAudio = null;
+
+        const loopingSoundFiles = [
+        ];
+
+        function isAmbient(filename, endKeyword) {
+            if (endKeyword && endKeyword.trim() !== "") return true;
+            return loopingSoundFiles.includes(filename);
+        }
+
+        function showToast(filename, reason, isLoop, endKeyword, icon = "🔊") {
+            toastIcon.textContent = icon;
+            let info = `<b>再生中: ${filename}</b>`;
+            if (isLoop) info += ` <span style='color:#4cd137;'>(環境音)</span>`;
+            if (endKeyword) info += `<br><span style='font-size:11px; color:#fffa65;'>停止予定: 「${endKeyword}」まで</span>`;
+            if (reason) info += `<br><span style='font-size:11px; color:#ddd;'>${reason}</span>`;
+
+            toastText.innerHTML = info;
+            toast.classList.add('show');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function highlightStopKeyword(endKeyword) {
+            document.querySelectorAll('.sound-keyword.stop-kw.active-target').forEach(el => {
+                el.classList.remove('active-target');
+            });
+            if (!endKeyword) return;
+            document.querySelectorAll(`.sound-keyword.stop-kw[data-stop="${endKeyword}"]`).forEach(el => {
+                el.classList.add('active-target');
+            });
+        }
+
+        function playAmbientSound(filename, reason, endKeyword) {
+            if (ambientAudio && ambientFilename === filename && !ambientAudio.paused) {
+                if (endKeyword) {
+                    currentEndKeyword = endKeyword;
+                    highlightStopKeyword(endKeyword);
+                }
+                return;
+            }
+
+            fadeOutAndStopAmbient();
+
+            try {
+                const audio = new Audio("sounds/" + filename + "?v=" + new Date().getTime());
+                audio.volume = 0.45;
+                audio.loop = true;
+
+                audio.play().then(() => {
+                    ambientAudio = audio;
+                    ambientFilename = filename;
+                    currentEndKeyword = endKeyword;
+                    highlightStopKeyword(endKeyword);
+                    showToast(filename, reason, true, endKeyword, "🌧️");
+                }).catch(e => console.log("環境音再生エラー:", e));
+            } catch (e) {
+                console.log("Audio load error", e);
+            }
+        }
+
+        // 🔇 自然で滑らかなフェードアウト停止（約1.2秒かけて減衰）
+        function fadeOutAndStopAmbient() {
+            if (!ambientAudio) return;
+            const fadeTarget = ambientAudio;
+
+            // 終了キーワードの点滅アニメーションを解除
+            highlightStopKeyword(null);
+
+            // すでにフェード処理中なら二重実行を防ぐ
+            if (fadeTarget._isFading) return;
+            fadeTarget._isFading = true;
+
+            const fadeDuration = 3000; // フェードにかける時間（ミリ秒）: 1.2秒
+            const intervalTime = 30;   // 更新頻度（ミリ秒）
+            const totalSteps = fadeDuration / intervalTime;
+            const initialVolume = fadeTarget.volume;
+            let currentStep = 0;
+
+            const fadeInterval = setInterval(() => {
+                currentStep++;
+                // 人間の聴覚特性に合わせた滑らかな減衰比率（0〜1）
+                const progress = currentStep / totalSteps;
+                const newVolume = initialVolume * Math.pow(1 - progress, 2);
+
+                if (newVolume > 0.01 && currentStep < totalSteps) {
+                    fadeTarget.volume = Math.max(0, newVolume);
+                } else {
+                    clearInterval(fadeInterval);
+                    fadeTarget.volume = 0;
+                    fadeTarget.pause();
+                    fadeTarget.currentTime = 0;
+                    fadeTarget._isFading = false;
+
+                    if (ambientAudio === fadeTarget) {
+                        ambientAudio = null;
+                        ambientFilename = null;
+                        currentEndKeyword = null;
+                    }
+                }
+            }, intervalTime);
+        }
+
+        function playActionSound(filename, reason) {
+            try {
+                if (actionAudio) {
+                    actionAudio.pause();
+                    actionAudio.currentTime = 0;
+                }
+
+                const audio = new Audio("sounds/" + filename + "?v=" + new Date().getTime());
+                audio.volume = 0.6;
+                audio.loop = false;
+
+                audio.play().then(() => {
+                    actionAudio = audio;
+                    showToast(filename, reason, false, null, "💥");
+                }).catch(e => console.log("アクション音再生エラー:", e));
+
+                audio.onended = () => {
+                    if (actionAudio === audio) actionAudio = null;
+                };
+            } catch (e) {
+                console.log("Audio load error", e);
+            }
+        }
+
+        function playRealSound(filename, reason, endKeyword) {
+            if (!filename) return;
+            if (isAmbient(filename, endKeyword)) {
+                playAmbientSound(filename, reason, endKeyword);
+            } else {
+                playActionSound(filename, reason);
+            }
+        }
+
+        function parseAozoraRuby(text) {
+            if (!text) return "";
+            let res = text.replace(/｜([^《]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+            res = res.replace(/([\u4E00-\u9FFF\u3005\u3007]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+            return res;
+        }
+
+        function wrapKeywordInHtml(htmlStr, rawKw, spanOpeningTag) {
+            if (!rawKw || !htmlStr) return htmlStr;
+            const plainKw = rawKw.replace(/[｜《].*?[》｜]/g, '').replace(/[《》｜]/g, '');
+            if (!plainKw) return htmlStr;
+
+            const pattern = plainKw.split('').map(char => {
+                const esc = char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return `(?:${esc}|<ruby>${esc}<rt>.*?</rt></ruby>)`;
+            }).join('');
+
+            const regex = new RegExp(`(?![^<]*>)(${pattern})`, '');
+            if (regex.test(htmlStr)) {
+                return htmlStr.replace(regex, `${spanOpeningTag}$1</span>`);
+            }
+            return htmlStr;
+        }
+
+        function buildSentenceDOM(sentenceRawText, startKwData, stopKw) {
+            const p = document.createElement('p');
+            p.className = 'sentence';
+
+            let processedHtml = parseAozoraRuby(sentenceRawText);
+            const startKw = startKwData ? startKwData.keyword : null;
+            const isSameKeyword = (startKw && stopKw && startKw.includes(stopKw));
+
+            if (startKwData && startKwData.keyword) {
+                const isAmb = isAmbient(startKwData.filename, startKwData.endKeyword);
+                const kwClass = isAmb ? "sound-keyword ambient-kw" : "sound-keyword action-kw";
+                const startTag = `<span class="${kwClass}" data-sound="${startKwData.filename}" data-end="${startKwData.endKeyword || ''}" data-reason="${startKwData.reason || ''}">`;
+                processedHtml = wrapKeywordInHtml(processedHtml, startKwData.keyword, startTag);
+            }
+
+            if (stopKw && !isSameKeyword) {
+                const stopTag = `<span class="sound-keyword stop-kw" data-stop="${stopKw}">`;
+                processedHtml = wrapKeywordInHtml(processedHtml, stopKw, stopTag);
+            }
+
+            p.innerHTML = processedHtml;
+
+            p.querySelectorAll('.sound-keyword.action-kw, .sound-keyword.ambient-kw').forEach(span => {
+                span.addEventListener('mouseenter', (e) => {
+                    e.stopPropagation();
+                    if (ambientAudio && isSameKeyword) fadeOutAndStopAmbient();
+
+                    span.classList.add('sound-triggered');
+                    const snd = span.getAttribute('data-sound');
+                    const end = span.getAttribute('data-end') || null;
+                    const rsn = span.getAttribute('data-reason');
+                    playRealSound(snd, rsn, end);
+                    setTimeout(() => span.classList.remove('sound-triggered'), 400);
+                });
+            });
+
+            p.querySelectorAll('.sound-keyword.stop-kw').forEach(span => {
+                span.addEventListener('mouseenter', (e) => {
+                    e.stopPropagation();
+                    const kw = span.getAttribute('data-stop');
+                    if (ambientAudio) {
+                        showToast(ambientFilename, `停止キーワード「${kw}」でBGMを停止しました`, false, null, "🔇");
+                        fadeOutAndStopAmbient();
+                    }
+                });
+            });
+
+            p.addEventListener('mouseenter', () => {
+                const plainSent = sentenceRawText.replace(/[《》｜]/g, '');
+                if (ambientAudio && currentEndKeyword && plainSent.includes(currentEndKeyword)) {
+                    showToast(ambientFilename, `終了文に到達したためBGMを停止します`, false, null, "🔇");
+                    fadeOutAndStopAmbient();
+                }
+            });
+
+            return p;
+        }
+
+        // 💡 timeline_integrated.json を読み込み
+        fetch('timeline_integrated.json')
+            //fetch('timeline_data.json')
+            .then(res => res.json())
+            .then(allData => {
+                container.innerHTML = '';
+
+                // 実験対象の区間（第211文〜第247文）のみを抽出
+                const experimentData = allData.filter(item =>
+                    item.sentence_index >= EXPERIMENT_START_INDEX && item.sentence_index <= EXPERIMENT_END_INDEX
+                );
+
+                const activeEndRanges = [];
+                experimentData.forEach((item, startIdx) => {
+                    if (item.is_sound_needed && isAmbient(item.selected_filename, item.sound_end_keyword)) {
+                        const endKw = item.sound_end_keyword ? item.sound_end_keyword.trim() : null;
+                        if (endKw) {
+                            for (let targetIdx = startIdx; targetIdx < experimentData.length; targetIdx++) {
+                                const plainText = experimentData[targetIdx].sentence.replace(/[《》｜]/g, '');
+                                if (plainText.includes(endKw)) {
+                                    activeEndRanges.push({
+                                        targetIdx: targetIdx,
+                                        keyword: endKw
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                experimentData.forEach((item, currentIdx) => {
+                    let startKwData = null;
+                    if (item.is_sound_needed && item.selected_filename) {
+                        let kw = item.target_keyword;
+                        const plainSent = item.sentence.replace(/[《》｜]/g, '');
+                        if (!kw || !plainSent.includes(kw)) {
+                            kw = plainSent.slice(-6).replace('。', '');
+                        }
+                        if (kw && plainSent.includes(kw)) {
+                            startKwData = {
+                                keyword: kw,
+                                filename: item.selected_filename,
+                                endKeyword: item.sound_end_keyword || null,
+                                reason: item.reason || ''
+                            };
+                        }
+                    }
+
+                    let matchedStopKw = null;
+                    const matchedRange = activeEndRanges.find(r => r.targetIdx === currentIdx);
+                    if (matchedRange) {
+                        matchedStopKw = matchedRange.keyword;
+                    }
+
+                    const pElem = buildSentenceDOM(item.sentence, startKwData, matchedStopKw);
+                    container.appendChild(pElem);
+                });
+            })
+            .catch(error => {
+                container.innerHTML = '<p style="color:red; text-align:center;">エラー: timeline_integrated_2.json が見つかりません。</p>';
+            });
+    </script>
+</body>
+
+</html>
