@@ -523,13 +523,15 @@
                 });
             });
 
-            p.addEventListener('mouseenter', () => {
-                const plainSent = sentenceRawText.replace(/[《》｜]/g, '');
-                if (ambientAudio && currentEndKeyword && plainSent.includes(currentEndKeyword)) {
-                    showToast(ambientFilename, `終了文に到達したためBGMを停止します`, false, null, "🔇");
-                    fadeOutAndStopAmbient();
-                }
-            });
+            /*
+                        p.addEventListener('mouseenter', () => {
+                            const plainSent = sentenceRawText.replace(/[《》｜]/g, '');
+                            if (ambientAudio && currentEndKeyword && plainSent.includes(currentEndKeyword)) {
+                                showToast(ambientFilename, `終了文に到達したためBGMを停止します`, false, null, "🔇");
+                                fadeOutAndStopAmbient();
+                            }
+                        });
+                        */
 
             return p;
         }

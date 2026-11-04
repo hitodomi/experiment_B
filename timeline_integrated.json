@@ -2568,7 +2568,7 @@
         "physical_action_thought": "峠の頂で突然山賊の一隊が姿を現し、一触即発の危機的対峙状態に入る。",
         "tension_level": 5,
         "is_sound_needed": true,
-        "selected_filename": "tense_ambient.mp3",
+        "selected_filename": "battle.m4a",
         "target_keyword": "山賊",
         "sound_end_keyword": "下った",
         "reason": "山賊の突如の出現と命の危機を演出するため、不穏な緊張音を開始する。"
