@@ -322,6 +322,9 @@
         }
 
         function showToast(filename, reason, isLoop, endKeyword, icon = "🔊") {
+            return;
+        }
+        /*
             toastIcon.textContent = icon;
             let info = `<b>再生中: ${filename}</b>`;
             if (isLoop) info += ` <span style='color:#4cd137;'>(環境音)</span>`;
@@ -334,6 +337,7 @@
             if (toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
         }
+        */
 
         function highlightStopKeyword(endKeyword) {
             document.querySelectorAll('.sound-keyword.stop-kw.active-target').forEach(el => {
